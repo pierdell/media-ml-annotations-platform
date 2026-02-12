@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ML Annotations Platform</title>
+  <link rel="stylesheet" href="src/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
+</head>
+<body>
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Top Header Bar                              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <header id="header">
+    <div class="header-left">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="20" rx="3"/>
+          <circle cx="8" cy="8" r="2" fill="currentColor"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        <span>ML Annotations</span>
+      </div>
+      <div class="header-separator"></div>
+      <div class="view-tabs">
+        <button class="tab-btn active" data-view="annotate">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Annotate
+        </button>
+        <button class="tab-btn" data-view="visualize">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Visualize ML
+        </button>
+        <button class="tab-btn" data-view="compare">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="9" height="9"/><rect x="13" y="13" width="9" height="9"/><path d="M13 2h9v9"/><path d="M2 13h9v9"/></svg>
+          Compare
+        </button>
+      </div>
+    </div>
+    <div class="header-center">
+      <span class="project-name" id="projectName">No media loaded</span>
+    </div>
+    <div class="header-right">
+      <button class="header-btn" id="btnImport" title="Import Media">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import
+      </button>
+      <button class="header-btn" id="btnExport" title="Export Annotations">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <div class="header-separator"></div>
+      <button class="header-btn icon-only" id="btnUndo" title="Undo (Ctrl+Z)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      </button>
+      <button class="header-btn icon-only" id="btnRedo" title="Redo (Ctrl+Shift+Z)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"/></svg>
+      </button>
+      <div class="zoom-control">
+        <button class="header-btn icon-only" id="btnZoomOut" title="Zoom Out">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        </button>
+        <span id="zoomLevel" class="zoom-label">100%</span>
+        <button class="header-btn icon-only" id="btnZoomIn" title="Zoom In">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        </button>
+        <button class="header-btn icon-only" id="btnFitView" title="Fit to View">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Main Content Area                           -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="mainContent">
+    <!-- Left Toolbar -->
+    <aside id="toolbar">
+      <div class="tool-section">
+        <span class="tool-section-label">Navigate</span>
+        <button class="tool-btn active" data-tool="select" title="Select (V)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="pan" title="Pan (H)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6m0 0v2a2 2 0 0 0 4 0v-2m-4 0H6a2 2 0 0 0-2 2v1a8 8 0 0 0 8 8h2a8 8 0 0 0 8-8V8a2 2 0 0 0-4 0v3"/></svg>
+        </button>
+      </div>
+
+      <div class="tool-section">
+        <span class="tool-section-label">Annotate</span>
+        <button class="tool-btn" data-tool="bbox" title="Bounding Box (B)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1" stroke-dasharray="4 2"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="polygon" title="Polygon (P)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 18,20 6,20 2,8.5"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="point" title="Point (.)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3" fill="currentColor"/><circle cx="12" cy="12" r="8"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="brush" title="Brush Mask (M)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="freehand" title="Freehand (F)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c2-4 4-6 7-6s4 4 6 4 4-4 7-4"/></svg>
+        </button>
+        <button class="tool-btn" data-tool="polyline" title="Polyline (L)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,17 9,8 15,14 21,5"/><circle cx="3" cy="17" r="2" fill="currentColor"/><circle cx="9" cy="8" r="2" fill="currentColor"/><circle cx="15" cy="14" r="2" fill="currentColor"/><circle cx="21" cy="5" r="2" fill="currentColor"/></svg>
+        </button>
+      </div>
+
+      <div class="tool-section">
+        <span class="tool-section-label">Label</span>
+        <div class="label-palette" id="labelPalette">
+          <button class="label-btn active" data-label="person" style="--label-color: #FF6B6B" title="Person">
+            <span class="label-dot"></span>
+            <span class="label-name">Person</span>
+          </button>
+          <button class="label-btn" data-label="vehicle" style="--label-color: #4ECDC4" title="Vehicle">
+            <span class="label-dot"></span>
+            <span class="label-name">Vehicle</span>
+          </button>
+          <button class="label-btn" data-label="animal" style="--label-color: #45B7D1" title="Animal">
+            <span class="label-dot"></span>
+            <span class="label-name">Animal</span>
+          </button>
+          <button class="label-btn" data-label="object" style="--label-color: #F7DC6F" title="Object">
+            <span class="label-dot"></span>
+            <span class="label-name">Object</span>
+          </button>
+          <button class="label-btn" data-label="text" style="--label-color: #BB8FCE" title="Text">
+            <span class="label-dot"></span>
+            <span class="label-name">Text</span>
+          </button>
+        </div>
+        <button class="tool-btn-small" id="btnAddLabel" title="Add Label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Label
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Viewport -->
+    <main id="viewport">
+      <!-- Empty state / Drop zone -->
+      <div id="dropZone" class="drop-zone">
+        <div class="drop-zone-content">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5">
+            <rect x="2" y="2" width="20" height="20" rx="3"/>
+            <circle cx="8" cy="8" r="2"/>
+            <path d="M21 15l-5-5L5 21"/>
+          </svg>
+          <h2>Drop images or videos here</h2>
+          <p>or click Import to browse files</p>
+          <div class="drop-zone-formats">
+            Supports: JPG, PNG, WebP, GIF, MP4, WebM, MOV
+          </div>
+          <button class="drop-zone-btn" id="btnDropZoneImport">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Browse Files
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas workspace (hidden until media loaded) -->
+      <div id="canvasWorkspace" class="canvas-workspace hidden">
+        <div id="canvasContainer" class="canvas-container">
+          <!-- Base media canvas -->
+          <canvas id="mediaCanvas"></canvas>
+          <!-- ML visualization overlay canvases -->
+          <canvas id="heatmapCanvas" class="overlay-canvas"></canvas>
+          <canvas id="detectionCanvas" class="overlay-canvas"></canvas>
+          <canvas id="maskCanvas" class="overlay-canvas"></canvas>
+          <canvas id="trackingCanvas" class="overlay-canvas"></canvas>
+          <!-- Annotation canvas (topmost) -->
+          <canvas id="annotationCanvas" class="overlay-canvas"></canvas>
+          <!-- Comparison slider -->
+          <div id="compareSlider" class="compare-slider hidden">
+            <div class="compare-handle">
+              <div class="compare-line"></div>
+              <div class="compare-grip">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l-7-7 7-7zm8 0v14l7-7-7-7z"/></svg>
+              </div>
+            </div>
+          </div>
+          <!-- Video element (hidden, used as source) -->
+          <video id="videoSource" style="display:none" muted></video>
+        </div>
+
+        <!-- Minimap -->
+        <div id="minimap" class="minimap">
+          <canvas id="minimapCanvas" width="180" height="120"></canvas>
+          <div id="minimapViewport" class="minimap-viewport"></div>
+        </div>
+
+        <!-- Floating info -->
+        <div id="cursorInfo" class="cursor-info hidden">
+          <span id="cursorCoords">0, 0</span>
+          <span id="cursorPixel" class="pixel-preview"></span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Panel -->
+    <aside id="rightPanel">
+      <div class="panel-tabs">
+        <button class="panel-tab active" data-panel="layers">Layers</button>
+        <button class="panel-tab" data-panel="properties">Properties</button>
+        <button class="panel-tab" data-panel="media">Media</button>
+      </div>
+
+      <!-- Layers Panel -->
+      <div id="layersPanel" class="panel-content active">
+        <div class="panel-section">
+          <div class="panel-section-header">
+            <span>ML Visualization Layers</span>
+            <button class="panel-icon-btn" id="btnAddMlLayer" title="Generate Demo ML Data">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div id="mlLayersList" class="layers-list">
+            <div class="layer-item" data-layer="heatmap">
+              <button class="layer-visibility" data-visible="false" title="Toggle visibility">
+                <svg class="icon-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="icon-eye-off hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+              <span class="layer-color-dot" style="background: #FF4500"></span>
+              <span class="layer-name">Attention Heatmap</span>
+              <input type="range" class="layer-opacity" min="0" max="100" value="60" title="Opacity">
+            </div>
+            <div class="layer-item" data-layer="detection">
+              <button class="layer-visibility" data-visible="false" title="Toggle visibility">
+                <svg class="icon-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="icon-eye-off hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+              <span class="layer-color-dot" style="background: #00FF88"></span>
+              <span class="layer-name">Object Detection</span>
+              <input type="range" class="layer-opacity" min="0" max="100" value="80" title="Opacity">
+            </div>
+            <div class="layer-item" data-layer="mask">
+              <button class="layer-visibility" data-visible="false" title="Toggle visibility">
+                <svg class="icon-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="icon-eye-off hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+              <span class="layer-color-dot" style="background: #9B59B6"></span>
+              <span class="layer-name">Segmentation Mask</span>
+              <input type="range" class="layer-opacity" min="0" max="100" value="50" title="Opacity">
+            </div>
+            <div class="layer-item" data-layer="tracking">
+              <button class="layer-visibility" data-visible="false" title="Toggle visibility">
+                <svg class="icon-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="icon-eye-off hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.45 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+              <span class="layer-color-dot" style="background: #3498DB"></span>
+              <span class="layer-name">Point Tracking</span>
+              <input type="range" class="layer-opacity" min="0" max="100" value="90" title="Opacity">
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-section-header">
+            <span>Annotations</span>
+            <span class="annotation-count" id="annotationCount">0</span>
+          </div>
+          <div id="annotationsList" class="layers-list">
+            <div class="empty-state-small">No annotations yet</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Properties Panel -->
+      <div id="propertiesPanel" class="panel-content">
+        <div class="panel-section">
+          <div class="panel-section-header">
+            <span>Selection</span>
+          </div>
+          <div id="selectionProperties" class="properties-form">
+            <div class="empty-state-small">Select an annotation to edit</div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-header">
+            <span>Attributes</span>
+          </div>
+          <div id="attributesForm" class="properties-form">
+            <div class="property-row">
+              <label>Label</label>
+              <select id="propLabel" class="prop-input" disabled>
+                <option>Person</option><option>Vehicle</option><option>Animal</option><option>Object</option><option>Text</option>
+              </select>
+            </div>
+            <div class="property-row">
+              <label>Confidence</label>
+              <input type="range" id="propConfidence" class="prop-input" min="0" max="100" value="100" disabled>
+              <span id="propConfidenceVal" class="prop-value">100%</span>
+            </div>
+            <div class="property-row">
+              <label>Occluded</label>
+              <input type="checkbox" id="propOccluded" class="prop-checkbox" disabled>
+            </div>
+            <div class="property-row">
+              <label>Truncated</label>
+              <input type="checkbox" id="propTruncated" class="prop-checkbox" disabled>
+            </div>
+            <div class="property-row">
+              <label>Notes</label>
+              <textarea id="propNotes" class="prop-textarea" rows="2" placeholder="Add notes..." disabled></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Media Panel -->
+      <div id="mediaPanel" class="panel-content">
+        <div class="panel-section">
+          <div class="panel-section-header">
+            <span>Media Queue</span>
+            <button class="panel-icon-btn" id="btnAddMoreMedia" title="Add more media">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div id="mediaQueue" class="media-queue">
+            <div class="empty-state-small">No media loaded</div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-header"><span>Info</span></div>
+          <div id="mediaInfo" class="media-info">
+            <div class="info-row"><span>Type</span><span id="infoType">-</span></div>
+            <div class="info-row"><span>Dimensions</span><span id="infoDimensions">-</span></div>
+            <div class="info-row"><span>Size</span><span id="infoSize">-</span></div>
+            <div class="info-row"><span>Duration</span><span id="infoDuration">-</span></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Bottom Timeline (for video)                 -->
+  <!-- ═══════════════════════════════════════════ -->
+  <footer id="timeline" class="hidden">
+    <div class="timeline-controls">
+      <button class="tl-btn" id="btnPrevFrame" title="Previous Frame (,)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+      </button>
+      <button class="tl-btn play-btn" id="btnPlayPause" title="Play/Pause (Space)">
+        <svg class="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        <svg class="icon-pause hidden" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+      <button class="tl-btn" id="btnNextFrame" title="Next Frame (.)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 18h2V6h-2zM6 18l8.5-6L6 6z"/></svg>
+      </button>
+      <span class="tl-time" id="tlCurrentTime">00:00.000</span>
+      <span class="tl-separator">/</span>
+      <span class="tl-time" id="tlDuration">00:00.000</span>
+      <span class="tl-frame" id="tlFrameInfo">Frame 0 / 0</span>
+      <div class="tl-spacer"></div>
+      <div class="speed-control">
+        <label>Speed</label>
+        <select id="playbackSpeed" class="speed-select">
+          <option value="0.1">0.1x</option>
+          <option value="0.25">0.25x</option>
+          <option value="0.5">0.5x</option>
+          <option value="1" selected>1x</option>
+          <option value="2">2x</option>
+          <option value="4">4x</option>
+        </select>
+      </div>
+    </div>
+    <div class="timeline-track-area">
+      <div class="timeline-ruler" id="timelineRuler"></div>
+      <div class="timeline-tracks" id="timelineTracks">
+        <div class="timeline-track" data-track="video">
+          <span class="track-label">Video</span>
+          <div class="track-bar" id="videoTrackBar">
+            <div class="track-progress" id="videoProgress"></div>
+            <div class="track-playhead" id="videoPlayhead"></div>
+          </div>
+        </div>
+        <div class="timeline-track" data-track="detections">
+          <span class="track-label">Detections</span>
+          <div class="track-bar" id="detectionTrackBar"></div>
+        </div>
+        <div class="timeline-track" data-track="annotations">
+          <span class="track-label">Annotations</span>
+          <div class="track-bar" id="annotationTrackBar"></div>
+        </div>
+        <div class="timeline-track" data-track="keyframes">
+          <span class="track-label">Keyframes</span>
+          <div class="track-bar" id="keyframeTrackBar"></div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Hidden file input -->
+  <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
+
+  <!-- Toast notifications -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="src/js/app.js"></script>
+</body>
+</html>

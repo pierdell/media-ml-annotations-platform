@@ -1,0 +1,10 @@
+{
+  "name": "media-ml-annotations-platform",
+  "version": "0.1.0",
+  "description": "ML Dataset Creation Platform - Image & Video annotation and ML visualization",
+  "scripts": {
+    "serve": "python3 -m http.server 3000",
+    "dev": "python3 -m http.server 3000"
+  },
+  "type": "module"
+}
