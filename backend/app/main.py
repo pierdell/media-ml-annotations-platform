@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 
-from app.api import api_router
+from app.api import api_router, ws_api_router
 from app.config import get_settings
 from app.database import async_session, engine
 from app.models import Base
@@ -49,7 +49,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Index Factory API",
     description="ML Dataset Creation Platform - Media indexing, search, and annotation",
-    version="0.1.0",
+    version="0.2.0",
     default_response_class=ORJSONResponse,
     lifespan=lifespan,
     docs_url="/api/docs" if settings.ENVIRONMENT != "production" else None,
@@ -66,19 +66,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Security middleware
+from app.middleware.security import SecurityMiddleware
+app.add_middleware(SecurityMiddleware)
+
+# Billing middleware (only when BILLING_ENABLED=true)
+if settings.BILLING_ENABLED:
+    from app.billing.middleware import BillingMiddleware
+    app.add_middleware(BillingMiddleware)
+    logger.info("billing_enabled")
+
+# Error handlers
+from app.middleware.error_handler import register_error_handlers
+register_error_handlers(app)
+
 # Routes
 app.include_router(api_router)
+app.include_router(ws_api_router)  # WebSocket routes at root level
+
+# Conditionally register billing API routes
+if settings.BILLING_ENABLED:
+    from app.billing.api import router as billing_router
+    app.include_router(billing_router, prefix="/api/v1")
 
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "version": "0.1.0"}
+    return {"status": "ok", "version": "0.2.0"}
 
 
 @app.get("/api/v1/status")
 async def api_status():
     """Aggregate system status."""
-    status = {"api": "ok"}
+    status = {"api": "ok", "billing_enabled": settings.BILLING_ENABLED}
 
     # Check DB
     try:

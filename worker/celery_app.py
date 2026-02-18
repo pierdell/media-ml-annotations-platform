@@ -15,6 +15,8 @@ app = Celery(
     include=[
         "worker.tasks.indexing",
         "worker.tasks.embedding",
+        "worker.tasks.augmentation",
+        "worker.tasks.training",
     ],
 )
 
@@ -42,6 +44,8 @@ app.conf.update(
         "worker.tasks.indexing.run_vlm_captioning": {"queue": "vlm"},
         "worker.tasks.indexing.run_text_embedding": {"queue": "default"},
         "worker.tasks.indexing.export_dataset": {"queue": "default"},
+        "worker.tasks.augmentation.run_augmentation_pipeline": {"queue": "default"},
+        "worker.tasks.training.run_training_job": {"queue": "training"},
     },
 
     # Beat schedule (periodic tasks)

@@ -60,6 +60,22 @@ class Settings(BaseSettings):
     ALLOWED_VIDEO_TYPES: str = "video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska"
     ALLOWED_AUDIO_TYPES: str = "audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/aac"
 
+    # ── Feature Flags ─────────────────────────────────────
+    BILLING_ENABLED: bool = False  # Enable for remote/SaaS deployment
+    RATE_LIMITING_ENABLED: bool = True
+
+    # ── Billing (only used when BILLING_ENABLED=true) ─────
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    DEFAULT_STORAGE_QUOTA_GB: int = 50
+    DEFAULT_COMPUTE_QUOTA_HOURS: float = 100.0
+    DEFAULT_API_RATE_LIMIT: int = 1000  # requests per hour
+
+    # ── Observability ─────────────────────────────────────
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "json"  # 'json' or 'console'
+    PROMETHEUS_ENABLED: bool = False
+
     class Config:
         env_file = ".env"
         case_sensitive = True
