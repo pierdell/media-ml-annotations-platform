@@ -265,9 +265,40 @@ class _HTTPAuthorizationCredentials:
         self.credentials = credentials
 
 
+class _WebSocket:
+    """Mock WebSocket for testing."""
+    def __init__(self, **kwargs):
+        self._accepted = False
+        self._sent = []
+
+    async def accept(self):
+        self._accepted = True
+
+    async def send_json(self, data):
+        self._sent.append(data)
+
+    async def receive_json(self):
+        return {"type": "ping"}
+
+    async def close(self, code=1000, reason=""):
+        pass
+
+
+class _WebSocketDisconnect(Exception):
+    def __init__(self, code=1000):
+        self.code = code
+
+
+class _BaseHTTPMiddleware:
+    def __init__(self, app=None, **kwargs):
+        self.app = app
+
+
 for mod_name in [
     'fastapi', 'fastapi.middleware', 'fastapi.middleware.cors',
     'fastapi.security', 'fastapi.responses',
+    'fastapi.exceptions',
+    'starlette', 'starlette.middleware', 'starlette.middleware.base',
 ]:
     if mod_name not in sys.modules:
         create_mock_module(mod_name)
@@ -280,12 +311,15 @@ fa.HTTPException = _HTTPException
 fa.Header = _Header
 fa.status = _status
 fa.Request = MagicMock
+fa.Response = MagicMock
 fa.UploadFile = MagicMock
 fa.File = MagicMock
 fa.Query = lambda *a, **kw: kw.get('default', None)
 fa.Path = lambda *a, **kw: kw.get('default', None)
 fa.Body = lambda *a, **kw: kw.get('default', None)
 fa.Form = lambda *a, **kw: kw.get('default', None)
+fa.WebSocket = _WebSocket
+fa.WebSocketDisconnect = _WebSocketDisconnect
 
 fa_cors = sys.modules['fastapi.middleware.cors']
 fa_cors.CORSMiddleware = MagicMock
@@ -298,12 +332,28 @@ fa_resp = sys.modules['fastapi.responses']
 fa_resp.ORJSONResponse = MagicMock
 fa_resp.JSONResponse = MagicMock
 
+fa_exc = sys.modules['fastapi.exceptions']
+fa_exc.RequestValidationError = type('RequestValidationError', (Exception,), {
+    'errors': lambda self: [],
+    '__init__': lambda self, errors=None, **kw: (super(type(self), self).__init__(), setattr(self, '_errors', errors or []))[0],
+})
+
+# Starlette
+starlette_mid = sys.modules['starlette.middleware.base']
+starlette_mid.BaseHTTPMiddleware = _BaseHTTPMiddleware
+
 
 # ── Other dependencies ───────────────────────────────────────
 
 # structlog
-create_mock_module('structlog', {
+_structlog_mock = create_mock_module('structlog', {
     'get_logger': lambda: MagicMock(),
+    'configure': lambda **kw: None,
+    'make_filtering_bound_logger': lambda level: MagicMock,
+    'PrintLoggerFactory': MagicMock,
+    'processors': MagicMock(),
+    'contextvars': MagicMock(),
+    'dev': MagicMock(),
 })
 
 # jose (JWT)
@@ -483,3 +533,11 @@ def get_s3_error_class():
 
 def get_http_exception_class():
     return _HTTPException
+
+
+def get_websocket_class():
+    return _WebSocket
+
+
+def get_websocket_disconnect_class():
+    return _WebSocketDisconnect

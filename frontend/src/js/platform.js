@@ -23,6 +23,8 @@ const routes = {
   '/projects/:id/datasets': renderDatasets,
   '/projects/:id/datasets/:did': renderDatasetDetail,
   '/projects/:id/search': renderSearch,
+  '/projects/:id/training': renderTraining,
+  '/projects/:id/quality': renderQuality,
   '/projects/:id/settings': renderProjectSettings,
 };
 
@@ -103,6 +105,8 @@ function shell(projectId, activeNav, content) {
     { id: 'media', icon: icons.image, label: 'Media Library', href: `#/projects/${projectId}/media` },
     { id: 'datasets', icon: icons.database, label: 'Datasets', href: `#/projects/${projectId}/datasets` },
     { id: 'search', icon: icons.search, label: 'Search', href: `#/projects/${projectId}/search` },
+    { id: 'training', icon: icons.brain, label: 'Training', href: `#/projects/${projectId}/training` },
+    { id: 'quality', icon: icons.edit, label: 'Quality', href: `#/projects/${projectId}/quality` },
     { id: 'settings', icon: icons.settings, label: 'Settings', href: `#/projects/${projectId}/settings` },
   ];
 
@@ -865,6 +869,248 @@ function showCreateDatasetModal(projectId) {
       navigate(`/projects/${projectId}/datasets/${ds.id}`);
     } catch (err) { toast(err.message, 'error'); }
   };
+}
+
+// ── Model Training ────────────────────────────────────────
+async function renderTraining(projectId) {
+  currentProject = await api.projects.get(projectId);
+  let jobs = [];
+  try { jobs = (await api.training.listJobs(projectId)).items || []; } catch {}
+
+  const statusColor = (s) => ({ queued: 'gray', preparing: 'yellow', training: 'blue', evaluating: 'blue', completed: 'green', failed: 'red', cancelled: 'gray' }[s] || 'gray');
+
+  app().innerHTML = shell(projectId, 'training', `
+    <div class="topbar">
+      <div class="topbar-left"><div class="page-title">Model Training</div></div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" id="btnNewJob">${icons.plus} New Training Job</button>
+      </div>
+    </div>
+    <div class="page-content">
+      ${jobs.length === 0 ? `
+        <div class="empty-state">${icons.brain}<h3>No training jobs</h3><p>Create a training job to train models from your annotated datasets.</p></div>
+      ` : `
+        <div class="table-container">
+          <table>
+            <thead><tr>
+              <th>Name</th><th>Type</th><th>Status</th><th>Progress</th><th>Val Loss</th><th>Created</th>
+            </tr></thead>
+            <tbody>
+              ${jobs.map(j => `
+                <tr>
+                  <td><strong style="color:var(--text-0)">${esc(j.name)}</strong><br><span style="font-size:11px;color:var(--text-2)">${esc(j.base_model)}</span></td>
+                  <td>${j.model_type.replace(/_/g, ' ')}</td>
+                  <td><span class="badge badge-${statusColor(j.status)}">${j.status}</span></td>
+                  <td>
+                    <div class="progress-bar" style="width:120px;display:inline-block;vertical-align:middle">
+                      <div class="progress-bar-fill" style="width:${j.progress_pct}%;background:var(--${statusColor(j.status)})"></div>
+                    </div>
+                    <span style="font-size:11px;color:var(--text-2);margin-left:4px">${j.current_epoch}/${j.total_epochs}</span>
+                  </td>
+                  <td>${j.val_loss != null ? j.val_loss.toFixed(4) : '-'}</td>
+                  <td style="color:var(--text-2);font-size:12px">${j.created_at ? new Date(j.created_at).toLocaleDateString() : '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `}
+    </div>
+  `);
+
+  $('#btnNewJob').onclick = async () => {
+    let datasetsList = [];
+    try { datasetsList = await api.datasets.list(projectId); } catch {}
+
+    if (datasetsList.length === 0) {
+      toast('Create a dataset first', 'error');
+      return;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-title">New Training Job</div>
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" id="tjName" placeholder="My Model v1" autofocus>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dataset</label>
+          <select class="form-select" id="tjDataset">
+            ${datasetsList.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Model Type</label>
+          <select class="form-select" id="tjType">
+            <option value="image_classifier">Image Classifier</option>
+            <option value="object_detector">Object Detector</option>
+            <option value="clip_finetune">CLIP Fine-tune</option>
+            <option value="text_classifier">Text Classifier</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label class="form-label">Epochs</label><input class="form-input" type="number" id="tjEpochs" value="50"></div>
+          <div class="form-group"><label class="form-label">Batch Size</label><input class="form-input" type="number" id="tjBatch" value="32"></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" id="cancelTJ">Cancel</button>
+          <button class="btn btn-primary" id="confirmTJ">Start Training</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => overlay.remove();
+    overlay.querySelector('#cancelTJ').onclick = close;
+    overlay.onclick = (e) => { if (e.target === overlay) close(); };
+    overlay.querySelector('#confirmTJ').onclick = async () => {
+      const name = overlay.querySelector('#tjName').value.trim();
+      if (!name) return;
+      try {
+        await api.training.createJob(projectId, {
+          name,
+          dataset_id: overlay.querySelector('#tjDataset').value,
+          model_type: overlay.querySelector('#tjType').value,
+          epochs: parseInt(overlay.querySelector('#tjEpochs').value),
+          batch_size: parseInt(overlay.querySelector('#tjBatch').value),
+        });
+        close();
+        toast('Training job created', 'success');
+        renderTraining(projectId);
+      } catch (err) { toast(err.message, 'error'); }
+    };
+  };
+}
+
+// ── Quality Control ──────────────────────────────────────
+async function renderQuality(projectId) {
+  currentProject = await api.projects.get(projectId);
+  const datasetsList = await api.datasets.list(projectId);
+
+  app().innerHTML = shell(projectId, 'quality', `
+    <div class="topbar">
+      <div class="topbar-left"><div class="page-title">Quality Control</div></div>
+    </div>
+    <div class="page-content">
+      ${datasetsList.length === 0 ? `
+        <div class="empty-state">${icons.edit}<h3>No datasets</h3><p>Create a dataset to use quality control features.</p></div>
+      ` : `
+        <div class="form-group" style="max-width:400px;margin-bottom:24px">
+          <label class="form-label">Select Dataset</label>
+          <select class="form-select" id="qcDataset">
+            ${datasetsList.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div id="qcContent">Loading...</div>
+      `}
+    </div>
+  `);
+
+  if (datasetsList.length === 0) return;
+
+  async function loadQCData(datasetId) {
+    const el = $('#qcContent');
+    el.innerHTML = '<div style="padding:20px;color:var(--text-2)">Loading quality data...</div>';
+
+    let summary = { reviews: {}, agreement: {}, annotation_sources: {} };
+    let alStats = { total_items: 0, annotated_items: 0 };
+    try { summary = await api.quality.summary(projectId, datasetId); } catch {}
+    try { alStats = await api.activeLearning.stats(projectId, datasetId); } catch {}
+
+    const r = summary.reviews || {};
+    const ag = summary.agreement || {};
+
+    el.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--green-bg);color:var(--green)">${icons.edit}</div>
+          <div class="stat-label">Approved</div>
+          <div class="stat-value">${r.approved || 0}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--red-bg, #2a1a1a);color:var(--red)">${icons.edit}</div>
+          <div class="stat-label">Rejected</div>
+          <div class="stat-value">${r.rejected || 0}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--yellow-bg);color:var(--yellow)">${icons.edit}</div>
+          <div class="stat-label">Needs Revision</div>
+          <div class="stat-value">${r.needs_revision || 0}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--blue-bg);color:var(--blue)">${icons.brain}</div>
+          <div class="stat-label">Agreement Score</div>
+          <div class="stat-value">${ag.score != null ? (ag.score * 100).toFixed(1) + '%' : 'N/A'}</div>
+          ${ag.metric ? `<div class="stat-sub">${ag.metric}</div>` : ''}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Active Learning</div></div>
+          <div class="card-body">
+            <div style="margin-bottom:12px">
+              <div style="font-size:13px;color:var(--text-2)">Annotated: ${alStats.annotated_items} / ${alStats.total_items}
+                (${alStats.total_items > 0 ? Math.round(alStats.annotated_items / alStats.total_items * 100) : 0}%)</div>
+              <div class="progress-bar" style="margin-top:8px">
+                <div class="progress-bar-fill" style="width:${alStats.total_items > 0 ? (alStats.annotated_items / alStats.total_items * 100) : 0}%;background:var(--green)"></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm btn-primary" id="btnSuggest">${icons.brain} Suggest Next</button>
+              <button class="btn btn-sm" id="btnAutoAnnotate">${icons.play} Auto-Annotate</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Agreement Analysis</div></div>
+          <div class="card-body">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-sm" id="btnKappa">Cohen's Kappa</button>
+              <button class="btn btn-sm" id="btnIoU">IoU Agreement</button>
+              <button class="btn btn-sm" id="btnPctAgree">% Agreement</button>
+            </div>
+            <div id="agreementResult" style="margin-top:12px;font-size:12px;color:var(--text-2)"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const did = datasetId;
+
+    $('#btnSuggest').onclick = async () => {
+      try {
+        const res = await api.activeLearning.suggest(projectId, did, 'limit=10&strategy=uncertainty');
+        toast(`${res.suggestions.length} items suggested`, 'success');
+      } catch (err) { toast(err.message, 'error'); }
+    };
+
+    $('#btnAutoAnnotate').onclick = async () => {
+      try {
+        const res = await api.activeLearning.autoAnnotate(projectId, did, 'confidence_threshold=0.8&max_items=50');
+        toast(`Auto-annotated ${res.auto_annotated} items`, 'success');
+        loadQCData(did);
+      } catch (err) { toast(err.message, 'error'); }
+    };
+
+    const runAgreement = async (metric) => {
+      try {
+        const res = await api.quality.computeAgreement(projectId, did, `metric=${metric}`);
+        $('#agreementResult').innerHTML = `<strong>${metric}:</strong> ${res.score != null ? (res.score * 100).toFixed(1) + '%' : 'N/A'} (${res.items_with_multiple_annotators} items, ${res.total_annotators} annotators)`;
+      } catch (err) { toast(err.message, 'error'); }
+    };
+
+    $('#btnKappa').onclick = () => runAgreement('cohens_kappa');
+    $('#btnIoU').onclick = () => runAgreement('iou');
+    $('#btnPctAgree').onclick = () => runAgreement('percent_agreement');
+  }
+
+  loadQCData(datasetsList[0].id);
+
+  $('#qcDataset').onchange = (e) => loadQCData(e.target.value);
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -102,3 +102,53 @@ export const indexing = {
   run: (pid, body) => request('POST', `/projects/${pid}/indexing/run`, body),
   status: (pid) => request('GET', `/projects/${pid}/indexing/status`),
 };
+
+// Active Learning
+export const activeLearning = {
+  suggest: (pid, did, params = '') => request('POST', `/projects/${pid}/active-learning/${did}/suggest${params ? '?' + params : ''}`),
+  autoAnnotate: (pid, did, params = '') => request('POST', `/projects/${pid}/active-learning/${did}/auto-annotate${params ? '?' + params : ''}`),
+  stats: (pid, did) => request('GET', `/projects/${pid}/active-learning/${did}/stats`),
+};
+
+// Quality Control
+export const quality = {
+  createReview: (pid, params) => request('POST', `/projects/${pid}/quality/reviews?${new URLSearchParams(params)}`),
+  listReviews: (pid, params = '') => request('GET', `/projects/${pid}/quality/reviews${params ? '?' + params : ''}`),
+  computeAgreement: (pid, did, params = '') => request('POST', `/projects/${pid}/quality/${did}/agreement${params ? '?' + params : ''}`),
+  summary: (pid, did) => request('GET', `/projects/${pid}/quality/${did}/summary`),
+};
+
+// Data Augmentation
+export const augmentation = {
+  getConfig: (pid, did) => request('GET', `/projects/${pid}/augmentation/${did}/config`),
+  configure: (pid, did, body) => request('POST', `/projects/${pid}/augmentation/${did}/configure`, body),
+  run: (pid, did, params = '') => request('POST', `/projects/${pid}/augmentation/${did}/run${params ? '?' + params : ''}`),
+};
+
+// Model Training
+export const training = {
+  createJob: (pid, params) => request('POST', `/projects/${pid}/training/jobs?${new URLSearchParams(params)}`),
+  listJobs: (pid, params = '') => request('GET', `/projects/${pid}/training/jobs${params ? '?' + params : ''}`),
+  getJob: (pid, jid) => request('GET', `/projects/${pid}/training/jobs/${jid}`),
+  cancelJob: (pid, jid) => request('POST', `/projects/${pid}/training/jobs/${jid}/cancel`),
+};
+
+// Billing (only available when billing is enabled)
+export const billing = {
+  usage: (pid) => request('GET', `/projects/${pid}/billing/usage`),
+  history: (pid, params = '') => request('GET', `/projects/${pid}/billing/usage/history${params ? '?' + params : ''}`),
+  updateQuotas: (pid, body) => request('POST', `/projects/${pid}/billing/quotas`, body),
+};
+
+// WebSocket helpers
+export function connectProjectWS(projectId) {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(`${protocol}//${location.host}/ws/projects/${projectId}?token=${_token}`);
+  return ws;
+}
+
+export function connectAnnotationWS(itemId) {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(`${protocol}//${location.host}/ws/annotate/${itemId}?token=${_token}`);
+  return ws;
+}

@@ -12,8 +12,12 @@ from app.config import get_settings
 from app.database import async_session, engine
 from app.models import Base
 from app.services.auth import ensure_admin_user
+from app.middleware.observability import configure_logging
 
 settings = get_settings()
+
+# Configure structured logging early
+configure_logging(log_level=settings.LOG_LEVEL, log_format=settings.LOG_FORMAT)
 logger = structlog.get_logger()
 
 
@@ -65,6 +69,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Observability middleware (request tracing + access logging)
+from app.middleware.observability import ObservabilityMiddleware
+app.add_middleware(ObservabilityMiddleware)
 
 # Security middleware
 from app.middleware.security import SecurityMiddleware
