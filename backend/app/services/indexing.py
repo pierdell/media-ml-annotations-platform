@@ -24,12 +24,8 @@ async def dispatch_indexing(
     priority: int = 0,
 ) -> dict:
     """Dispatch indexing jobs for media items."""
-    from worker.tasks.indexing import (
-        run_clip_embedding,
-        run_dino_embedding,
-        run_vlm_captioning,
-        run_text_embedding,
-    )
+    from worker.tasks.embedding import run_clip_embedding, run_dino_embedding
+    from worker.tasks.indexing import run_vlm_captioning, run_text_embedding
 
     if pipelines is None:
         pipelines = ["clip", "dino", "vlm", "text"]
