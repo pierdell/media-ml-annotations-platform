@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Renderer Comparison - PixiJS vs Hybrid</title>
+  <link rel="stylesheet" href="src/css/compare.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
+</head>
+<body>
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Header                                      -->
+  <!-- ═══════════════════════════════════════════ -->
+  <header class="compare-header">
+    <div class="logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span>Renderer Comparison</span>
+    </div>
+    <div class="header-sep"></div>
+    <a href="index.html" style="color: var(--text-secondary); font-size: 12px; text-decoration: none;">Back to Annotator</a>
+  </header>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Toolbar                                     -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="toolbar-row">
+    <div class="tool-group">
+      <span class="tool-group-label">Nav</span>
+      <button class="tool-btn active" data-tool="select" title="Select (V)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
+      </button>
+      <button class="tool-btn" data-tool="pan" title="Pan (H)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6"/></svg>
+      </button>
+    </div>
+
+    <div class="header-sep"></div>
+
+    <div class="tool-group">
+      <span class="tool-group-label">Draw</span>
+      <button class="tool-btn" data-tool="bbox" title="Bounding Box (B)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1" stroke-dasharray="4 2"/></svg>
+      </button>
+      <button class="tool-btn" data-tool="polygon" title="Polygon (P)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 22,8.5 18,20 6,20 2,8.5"/></svg>
+      </button>
+      <button class="tool-btn" data-tool="point" title="Point (.)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3" fill="currentColor"/><circle cx="12" cy="12" r="8"/></svg>
+      </button>
+      <button class="tool-btn" data-tool="freehand" title="Freehand (F)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c2-4 4-6 7-6s4 4 6 4 4-4 7-4"/></svg>
+      </button>
+      <button class="tool-btn" data-tool="polyline" title="Polyline (L)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,17 9,8 15,14 21,5"/></svg>
+      </button>
+    </div>
+
+    <div class="header-sep"></div>
+
+    <div class="tool-group">
+      <span class="tool-group-label">Label</span>
+      <button class="label-btn active" data-label="person" style="--label-color: #FF6B6B"><span class="label-dot"></span>Person</button>
+      <button class="label-btn" data-label="vehicle" style="--label-color: #4ECDC4"><span class="label-dot"></span>Vehicle</button>
+      <button class="label-btn" data-label="animal" style="--label-color: #45B7D1"><span class="label-dot"></span>Animal</button>
+      <button class="label-btn" data-label="object" style="--label-color: #F7DC6F"><span class="label-dot"></span>Object</button>
+    </div>
+
+    <div class="header-sep"></div>
+
+    <div class="tool-group">
+      <span class="tool-group-label">Layers</span>
+      <button class="layer-toggle" data-layer="heatmap"><span class="layer-dot" style="background:#FF4500"></span>Heatmap</button>
+      <button class="layer-toggle" data-layer="detection"><span class="layer-dot" style="background:#00FF88"></span>Detection</button>
+      <button class="layer-toggle" data-layer="mask"><span class="layer-dot" style="background:#9B59B6"></span>Mask</button>
+      <button class="layer-toggle" data-layer="tracking"><span class="layer-dot" style="background:#3498DB"></span>Tracking</button>
+    </div>
+
+    <div class="header-sep"></div>
+
+    <button class="action-btn" id="btnImport">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import
+    </button>
+    <button class="action-btn" id="btnGenerateML">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+      Generate ML Data (200 objects)
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Side-by-Side Viewports                      -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="viewport-grid">
+    <!-- Left: Full PixiJS -->
+    <div class="viewport-panel" id="viewport-left">
+      <span class="viewport-label pixi">Full PixiJS (WebGL)</span>
+      <span class="fps-counter" id="fps-left">-- FPS</span>
+      <div class="drop-overlay" id="drop-left">
+        <div class="drop-content">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="8" cy="8" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+          <h3>Drop image here</h3>
+          <p>or click Import</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Hybrid -->
+    <div class="viewport-panel" id="viewport-right">
+      <span class="viewport-label hybrid">Hybrid (WebGL + Canvas 2D)</span>
+      <span class="fps-counter" id="fps-right">-- FPS</span>
+      <div class="drop-overlay" id="drop-right">
+        <div class="drop-content">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="8" cy="8" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+          <h3>Drop image here</h3>
+          <p>or click Import</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input -->
+  <input type="file" id="fileInput" accept="image/*" />
+
+  <!-- Toast notifications -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- App Script -->
+  <script type="module" src="src/js/compare/compare-app.js"></script>
+</body>
+</html>
