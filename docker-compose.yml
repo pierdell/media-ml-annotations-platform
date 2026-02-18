@@ -8,6 +8,14 @@
 # ═══════════════════════════════════════════════════════════════
 
 services:
+  # ── Annotations Platform (static frontend) ─────────────────
+  annotations-platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3004:80"
+
   # ── PostgreSQL ────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine

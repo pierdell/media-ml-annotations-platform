@@ -120,18 +120,20 @@ function stepFrame(direction) {
   }
 
   const frameDuration = 1 / state.fps;
-  videoEl.currentTime = clamp(
+  const targetTime = clamp(
     videoEl.currentTime + direction * frameDuration,
     0,
     videoEl.duration
   );
 
-  setTimeout(() => {
+  videoEl.onseeked = () => {
+    videoEl.onseeked = null;
     drawVideoFrame();
     state.currentTime = videoEl.currentTime;
     emit('timeUpdate', videoEl.currentTime);
     updateVideoOverlays();
-  }, 50);
+  };
+  videoEl.currentTime = targetTime;
 }
 
 function updateTimeDisplay(time) {
@@ -185,14 +187,17 @@ function seekToPosition(e) {
   if (!videoTrackBar || !videoEl) return;
   const rect = videoTrackBar.getBoundingClientRect();
   const pct = clamp((e.clientX - rect.left) / rect.width, 0, 1);
-  videoEl.currentTime = pct * state.duration;
-  state.currentTime = videoEl.currentTime;
-  emit('timeUpdate', state.currentTime);
+  const targetTime = pct * state.duration;
 
-  setTimeout(() => {
+  state.currentTime = targetTime;
+  emit('timeUpdate', targetTime);
+
+  videoEl.onseeked = () => {
+    videoEl.onseeked = null;
     drawVideoFrame();
     updateVideoOverlays();
-  }, 30);
+  };
+  videoEl.currentTime = targetTime;
 }
 
 // ── Ruler & Demo Tracks ───────────────────────────────────
