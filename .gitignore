@@ -15,3 +15,8 @@ venv/
 htmlcov/
 .mypy_cache/
 celerybeat-schedule
+uploads/
+*.onnx
+*.pt
+*.bin
+*.safetensors

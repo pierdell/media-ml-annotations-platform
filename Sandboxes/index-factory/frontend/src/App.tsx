@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { ToastProvider } from '@/components/Toast'
 import Layout from '@/components/Layout'
 import LoginPage from '@/pages/LoginPage'
 import DashboardPage from '@/pages/DashboardPage'
@@ -22,18 +23,24 @@ export default function App() {
   }
 
   if (!user) {
-    return <LoginPage onLogin={login} onRegister={register} />
+    return (
+      <ToastProvider>
+        <LoginPage onLogin={login} onRegister={register} />
+      </ToastProvider>
+    )
   }
 
   return (
-    <Layout user={user} onLogout={logout}>
-      <Routes>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/objects/:objectId" element={<ObjectDetailPage />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/documents" element={<DocumentsPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Layout>
+    <ToastProvider>
+      <Layout user={user} onLogout={logout}>
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/objects/:objectId" element={<ObjectDetailPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Layout>
+    </ToastProvider>
   )
 }
