@@ -1,11 +1,24 @@
-from pydantic import BaseModel
+import re
+from pydantic import BaseModel, field_validator
 import uuid
 from datetime import datetime
+
+HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
 class ObjectCreate(BaseModel):
     name: str
     description: str | None = None
+
+    @field_validator("name")
+    @classmethod
+    def name_not_empty(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Name cannot be empty")
+        if len(v) > 255:
+            raise ValueError("Name must be at most 255 characters")
+        return v
 
 
 class ObjectUpdate(BaseModel):
@@ -30,6 +43,23 @@ class OntologyNodeCreate(BaseModel):
     description: str | None = None
     color: str | None = None
     sort_order: int = 0
+
+    @field_validator("name")
+    @classmethod
+    def name_not_empty(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Name cannot be empty")
+        if len(v) > 255:
+            raise ValueError("Name must be at most 255 characters")
+        return v
+
+    @field_validator("color")
+    @classmethod
+    def color_valid(cls, v: str | None) -> str | None:
+        if v is not None and not HEX_COLOR_RE.match(v):
+            raise ValueError("Color must be a valid hex color (e.g. #3b82f6)")
+        return v
 
 
 class OntologyNodeUpdate(BaseModel):
