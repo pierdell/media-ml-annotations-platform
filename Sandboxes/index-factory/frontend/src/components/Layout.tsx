@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Search, Boxes, FileText, LayoutDashboard, LogOut, Zap } from 'lucide-react'
+import { Search, FileText, LayoutDashboard, LogOut, Zap, Command } from 'lucide-react'
 import { clsx } from 'clsx'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboard'
 import type { User } from '@/types'
 
 interface Props {
@@ -10,13 +11,14 @@ interface Props {
 }
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/search', label: 'Search', icon: Search },
-  { to: '/documents', label: 'Documents', icon: FileText },
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard, shortcut: 'D' },
+  { to: '/search', label: 'Search', icon: Search, shortcut: 'K' },
+  { to: '/documents', label: 'Documents', icon: FileText, shortcut: 'N' },
 ]
 
 export default function Layout({ user, onLogout, children }: Props) {
   const location = useLocation()
+  useKeyboardShortcuts()
 
   return (
     <div className="min-h-screen flex">
@@ -32,25 +34,50 @@ export default function Layout({ user, onLogout, children }: Props) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => {
+          {NAV_ITEMS.map(({ to, label, icon: Icon, shortcut }) => {
             const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to))
             return (
               <Link
                 key={to}
                 to={to}
                 className={clsx(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
                   active
                     ? 'bg-brand-600/15 text-brand-400 shadow-sm shadow-brand-500/5'
                     : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
                 )}
               >
-                <Icon className="w-4.5 h-4.5" />
-                {label}
+                <Icon className="w-4 h-4" />
+                <span className="flex-1">{label}</span>
+                <kbd className={clsx(
+                  'hidden group-hover:inline-flex items-center gap-0.5 text-[10px] font-mono px-1.5 py-0.5 rounded border',
+                  active
+                    ? 'border-brand-500/20 text-brand-500/60'
+                    : 'border-gray-700/50 text-gray-600'
+                )}>
+                  <Command className="w-2.5 h-2.5" />{shortcut}
+                </kbd>
               </Link>
             )
           })}
         </nav>
+
+        {/* Keyboard hints */}
+        <div className="px-4 pb-3">
+          <div className="px-3 py-2 rounded-lg bg-gray-900/40 border border-gray-800/30">
+            <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-1.5">Shortcuts</p>
+            <div className="space-y-1">
+              {NAV_ITEMS.map(({ label, shortcut }) => (
+                <div key={shortcut} className="flex items-center justify-between text-[11px]">
+                  <span className="text-gray-500">{label}</span>
+                  <kbd className="text-gray-600 font-mono bg-gray-800/50 px-1 py-0.5 rounded text-[9px]">
+                    Cmd+{shortcut}
+                  </kbd>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* User */}
         <div className="p-4 border-t border-gray-800/50">

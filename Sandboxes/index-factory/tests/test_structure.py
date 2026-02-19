@@ -292,10 +292,10 @@ class TestTypeScriptSyntax(unittest.TestCase):
 
     def _check_bracket_balance(self, filepath: Path) -> bool:
         content = filepath.read_text()
-        # Remove strings and template literals
-        content = re.sub(r"'[^']*'", "", content)
-        content = re.sub(r'"[^"]*"', "", content)
-        content = re.sub(r"`[^`]*`", "", content)
+        # Remove strings and template literals (don't match across newlines)
+        content = re.sub(r"'[^'\n]*'", "", content)
+        content = re.sub(r'"[^"\n]*"', "", content)
+        content = re.sub(r"`[^`]*`", "", content, flags=re.DOTALL)
         # Remove comments
         content = re.sub(r"//.*$", "", content, flags=re.MULTILINE)
         content = re.sub(r"/\*.*?\*/", "", content, flags=re.DOTALL)

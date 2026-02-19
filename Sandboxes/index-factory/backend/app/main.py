@@ -6,7 +6,7 @@ import structlog
 import os
 
 from app.config import get_settings
-from app.api import auth, objects, documents, media, search, categories
+from app.api import auth, objects, documents, media, search, categories, ws
 
 logger = structlog.get_logger()
 settings = get_settings()
@@ -49,6 +49,7 @@ app.include_router(documents.router)
 app.include_router(media.router)
 app.include_router(search.router)
 app.include_router(categories.router)
+app.include_router(ws.router)
 
 # Serve uploads
 if os.path.isdir(settings.upload_dir):
